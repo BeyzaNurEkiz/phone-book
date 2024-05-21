@@ -14,6 +14,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,6 +32,11 @@ fun ContactDetail(incomingContact : Contacts) {
     val ctName= remember { mutableStateOf("") }
     val ctNumber= remember { mutableStateOf("") }
     val localFocusManager= LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
+
+    LaunchedEffect(key1 = true) {
+        ctName.value= incomingContact.contact_name
+        ctNumber.value= incomingContact.contact_number
+    }
 
     Scaffold (
         topBar = {
@@ -57,7 +63,7 @@ fun ContactDetail(incomingContact : Contacts) {
                 Button(onClick = {
                     val contact_name=ctName.value
                     val contact_number=ctNumber.value
-                    Log.e("Kişi Güncelle", "$contact_name - $contact_number")
+                    Log.e("Kişi Güncelle", "${incomingContact.contact_id} - $contact_name - $contact_number")
 
                     localFocusManager.clearFocus()
 

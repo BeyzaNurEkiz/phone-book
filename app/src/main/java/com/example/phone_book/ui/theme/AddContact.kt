@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -61,8 +62,14 @@ fun AddContact() {
 
                     localFocusManager.clearFocus()
 
-                }, modifier = Modifier.size(250.dp, 50.dp)) {
+                },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(id = R.color.mypink), // Arka plan rengi
+                        contentColor = Color.White   // İçerik rengi (metin, ikon vs.)
+                    ),
+                    modifier = Modifier.size(250.dp, 50.dp)) {
                     Text(text = "Kaydet")
+
                 }
             }
         }
