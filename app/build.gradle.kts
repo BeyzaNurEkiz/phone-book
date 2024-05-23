@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+
 }
 
 android {
@@ -49,6 +50,8 @@ android {
     }
 }
 
+apply { plugin("kotlin-kapt") }
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -68,4 +71,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.google.code.gson:gson:2.8.6")
+    //ViewModel
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    //LiveData
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.7")
 }

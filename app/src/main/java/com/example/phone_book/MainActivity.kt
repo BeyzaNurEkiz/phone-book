@@ -30,6 +30,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -47,8 +49,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.phone_book.entity.Contacts
-import com.example.phone_book.ui.theme.AddContact
 import com.example.phone_book.ui.theme.PhonebookTheme
+import com.example.phone_book.viewmodel.ContactDetailViewModel
+import com.example.phone_book.viewmodel.HomePageViewModel
 import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
@@ -72,19 +75,19 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PageTransitions() {
-    val navController= rememberNavController()
-    NavHost(navController = navController, startDestination = "homepage"){
-        composable("homepage"){
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = "homepage") {
+        composable("homepage") {
             HomePage(navController = navController)
         }
-        composable("contact_add_page"){
+        composable("contact_add_page") {
             AddContact()
         }
-        composable("contact_detail_page/{contact}", arguments= listOf(
-            navArgument("contact"){type= NavType.StringType}
-        )){
-            val json= it.arguments?.getString("contact")
-            val obj=Gson().fromJson(json,Contacts::class.java)
+        composable("contact_detail_page/{contact}", arguments = listOf(
+            navArgument("contact") { type = NavType.StringType }
+        )) {
+            val json = it.arguments?.getString("contact")
+            val obj = Gson().fromJson(json, Contacts::class.java)
             ContactDetail(obj)
         }
     }
@@ -94,33 +97,27 @@ fun PageTransitions() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(navController: NavController) {
-    val isSearching = remember{
+    val isSearching = remember {
         mutableStateOf(false)
     }
-    val ct= remember {
+    val ct = remember {
         mutableStateOf("")
     }
-    val contactList= remember {
-        mutableStateListOf<Contacts>()
-    }
+    val viewModel: HomePageViewModel = viewModel()
+    val contactList = viewModel.contactList.observeAsState(listOf())
 
-    LaunchedEffect(key1 = true) {
-      val k1= Contacts(1, "Ahmet", "11111")
-      val k2= Contacts(2, "Beyza", "2222")
-        contactList.add(k1)
-        contactList.add(k2)
-    }
-    Scaffold (
+
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    if (isSearching.value){
+                    if (isSearching.value) {
                         TextField(
                             value = ct.value,
                             onValueChange = {
-                                ct.value= it
-                                Log.e("Kişi Arama", it)
-                                            },
+                                ct.value = it
+                                viewModel.search(it)
+                            },
                             label = { Text(text = "Ara") },
                             colors = TextFieldDefaults.textFieldColors(
                                 containerColor = Color.Transparent,
@@ -130,15 +127,15 @@ fun HomePage(navController: NavController) {
                                 unfocusedLabelColor = Color.White,
                             )
                         )
-                    }else{
+                    } else {
                         Text(text = "Kişiler", color = Color.White)
                     }
-                        },
+                },
                 actions = {
-                    if (isSearching.value){
+                    if (isSearching.value) {
                         IconButton(onClick = {
-                            isSearching.value=false
-                            ct.value=""
+                            isSearching.value = false
+                            ct.value = ""
                         }) {
                             Icon(
                                 painter = painterResource(id = R.drawable.close_icon),
@@ -146,9 +143,9 @@ fun HomePage(navController: NavController) {
                                 tint = Color.White,
                             )
                         }
-                    }else{
+                    } else {
                         IconButton(onClick = {
-                            isSearching.value=true
+                            isSearching.value = true
                         }) {
                             Icon(
                                 painter = painterResource(id = R.drawable.search_icon),
@@ -164,47 +161,51 @@ fun HomePage(navController: NavController) {
             )
         },
         content = {
-                  LazyColumn {
-                      item {
-                          Spacer(modifier = Modifier.height(70.dp))
-                      }
-                      items(
-                          count = contactList.count(),
-                          itemContent = {
-                              val contact= contactList[it]
-                              Card(modifier = Modifier
-                                  .padding(all = 5.dp)
-                                  .fillMaxWidth()) {
-                                  Row(modifier= Modifier.clickable {
-                                      val contactJson= Gson().toJson(contact)
-                                      navController.navigate("contact_detail_page/${contactJson}")
-                                  }) {
-                                      Row(modifier= Modifier
-                                          .padding(all = 10.dp)
-                                          .fillMaxWidth(),
-                                          verticalAlignment = Alignment.CenterVertically,
-                                          horizontalArrangement = Arrangement.SpaceBetween
-                                      ) {
-                                          Text(text = "${contact.contact_name} - ${contact.contact_number}")
+            LazyColumn {
+                item {
+                    Spacer(modifier = Modifier.height(70.dp))
+                }
+                items(
+                    count = contactList.value!!.count(),
+                    itemContent = {
+                        val contact = contactList.value!![it]
+                        Card(
+                            modifier = Modifier
+                                .padding(all = 5.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Row(modifier = Modifier.clickable {
+                                val contactJson = Gson().toJson(contact)
+                                navController.navigate("contact_detail_page/${contactJson}")
+                            }) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(all = 10.dp)
+                                        .fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "${contact.contact_name} - ${contact.contact_number}")
 
-                                          IconButton(onClick = {
-                                              Log.e("Delete Contact", "${contact.contact_id}")
-                                          }) {
-                                              Icon(
-                                                  painter = painterResource(id = R.drawable.delete_icon),
-                                                  contentDescription = "",
-                                                  tint = Color.Gray
-                                              )
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                      )
-                  }
+                                    IconButton(onClick = {
+                                        viewModel.delete(contact.contact_id)
+                                    }) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.delete_icon),
+                                            contentDescription = "",
+                                            tint = Color.Gray
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
         },
         floatingActionButton = {
-            Button(onClick = { navController.navigate("contact_add_page") },
+            Button(
+                onClick = { navController.navigate("contact_add_page") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = colorResource(id = R.color.mypink),
                     contentColor = Color.White

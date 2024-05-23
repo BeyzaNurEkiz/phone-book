@@ -23,22 +23,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.phone_book.entity.Contacts
+import com.example.phone_book.viewmodel.AddContactViewModel
+import com.example.phone_book.viewmodel.ContactDetailViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactDetail(incomingContact : Contacts) {
-    val ctName= remember { mutableStateOf("") }
-    val ctNumber= remember { mutableStateOf("") }
-    val localFocusManager= LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
+fun ContactDetail(incomingContact: Contacts) {
+    val ctName = remember { mutableStateOf("") }
+    val ctNumber = remember { mutableStateOf("") }
+    val localFocusManager =
+        LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
+
+    val viewModel: ContactDetailViewModel = viewModel()
 
     LaunchedEffect(key1 = true) {
-        ctName.value= incomingContact.contact_name
-        ctNumber.value= incomingContact.contact_number
+        ctName.value = incomingContact.contact_name
+        ctNumber.value = incomingContact.contact_number
     }
 
-    Scaffold (
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(text = "Kişi Detay", color = Color.White) },
@@ -48,22 +54,23 @@ fun ContactDetail(incomingContact : Contacts) {
             )
         },
         content = {
-            Column(modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 TextField(
                     value = ctName.value,
-                    onValueChange = {ctName.value= it},
+                    onValueChange = { ctName.value = it },
                     label = { Text(text = "Kişi Adı") })
                 TextField(
                     value = ctNumber.value,
-                    onValueChange = {ctNumber.value= it},
+                    onValueChange = { ctNumber.value = it },
                     label = { Text(text = "Kişi Numarası") })
                 Button(onClick = {
-                    val contact_name=ctName.value
-                    val contact_number=ctNumber.value
-                    Log.e("Kişi Güncelle", "${incomingContact.contact_id} - $contact_name - $contact_number")
+                    val contact_name = ctName.value
+                    val contact_number = ctNumber.value
+                    viewModel.update(incomingContact.contact_id, contact_name, contact_number)
 
                     localFocusManager.clearFocus()
 

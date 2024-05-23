@@ -1,4 +1,4 @@
-package com.example.phone_book.ui.theme
+package com.example.phone_book
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -23,17 +23,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.phone_book.R
+import com.example.phone_book.viewmodel.AddContactViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddContact() {
-    val ctName= remember { mutableStateOf("") }
-    val ctNumber= remember { mutableStateOf("") }
-    val localFocusManager= LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
+    val ctName = remember { mutableStateOf("") }
+    val ctNumber = remember { mutableStateOf("") }
+    val localFocusManager =
+        LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
 
-    Scaffold (
+
+    val viewModel: AddContactViewModel = viewModel()
+
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(text = "Kişi Kayıt", color = Color.White) },
@@ -43,31 +49,38 @@ fun AddContact() {
             )
         },
         content = {
-            Column(modifier = Modifier.fillMaxSize(),
+            Column(
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 TextField(
                     value = ctName.value,
-                    onValueChange = {ctName.value= it},
-                    label = { Text(text = "Kişi Adı")})
+                    onValueChange = { ctName.value = it },
+                    label = { Text(text = "Kişi Adı") })
                 TextField(
                     value = ctNumber.value,
-                    onValueChange = {ctNumber.value= it},
-                    label = { Text(text = "Kişi Numarası")})
-                Button(onClick = {
-                    val contact_name=ctName.value
-                    val contact_number=ctNumber.value
-                    Log.e("Kişi Kayıt", "$contact_name - $contact_number")
+                    onValueChange = { ctNumber.value = it },
+                    label = { Text(text = "Kişi Numarası") })
+                Button(
+                    onClick = {
+                        val contact_name = ctName.value
+                        val contact_number = ctNumber.value
+                        viewModel.add(
+                            contact_name,
+                            contact_number
+                        )     //Butona basılınca viewmodeldeki add modeline bu bilgiler gidecek.
+                        // o da repo içerisindeki addContact fonk götürecek.
 
-                    localFocusManager.clearFocus()
+                        localFocusManager.clearFocus()
 
-                },
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.mypink), // Arka plan rengi
                         contentColor = Color.White   // İçerik rengi (metin, ikon vs.)
                     ),
-                    modifier = Modifier.size(250.dp, 50.dp)) {
+                    modifier = Modifier.size(250.dp, 50.dp)
+                ) {
                     Text(text = "Kaydet")
 
                 }
