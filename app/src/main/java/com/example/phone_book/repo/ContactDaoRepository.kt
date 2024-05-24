@@ -1,14 +1,22 @@
 package com.example.phone_book.repo
 
+import android.app.Application
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.phone_book.entity.Contacts
+import com.example.phone_book.room.contactDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
-class ContactDaoRepository {
-    var contactList =
-        MutableLiveData<List<Contacts>>()      //Contact sınıfındaki nesneleri getirecek-listeleyecek.
+class ContactDaoRepository (var application: Application){
+    var contactList = MutableLiveData<List<Contacts>>()      //Contact sınıfındaki nesneleri getirecek-listeleyecek.
+        var db:contactDatabase
+
 
     init {
+        db= contactDatabase.databaseAccess(application)!!
         contactList =
             MutableLiveData()                               //contact listesini oluşturuyoruz.
     }
@@ -20,13 +28,9 @@ class ContactDaoRepository {
     //sayfalardaki işlemleri artık tanımlayabiliriz.
 
     fun allContacts() {
-        val list = mutableListOf<Contacts>()
-        val k1 = Contacts(1, "Ahmet", "11111")
-        val k2 = Contacts(2, "Beyza", "2222")
-        list.add(k1)
-        list.add(k2)
-
-        contactList.value = list
+        val job:Job = CoroutineScope(Dispatchers.Main).launch {
+            contactList.value= db.contactDao().allContacts()
+        }
     }
 
     fun searchContact(search: String) {
