@@ -1,7 +1,9 @@
 package com.example.phone_book
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,29 +17,53 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.phone_book.R
 import com.example.phone_book.viewmodel.AddContactViewModel
+import com.example.phone_book.viewmodel.HomePageViewModel
+import com.example.phone_book.viewmodelfactory.AddContactViewModelFactory
+import com.example.phone_book.viewmodelfactory.HomePageViewModelFactory
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddContact() {
+fun AddContact(navController: NavController) {
     val ctName = remember { mutableStateOf("") }
     val ctNumber = remember { mutableStateOf("") }
+
     val localFocusManager =
         LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
 
 
-    val viewModel: AddContactViewModel = viewModel()
+    val context = LocalContext.current
+    val viewModel: AddContactViewModel = viewModel(
+        factory = AddContactViewModelFactory(context.applicationContext as Application)
+    )
+
+    val addSuccess = viewModel.addSuccess.observeAsState()
+
+    LaunchedEffect(addSuccess.value) {
+        if (addSuccess.value == true) {
+            Toast.makeText(context, "Kayıt başarılı!", Toast.LENGTH_SHORT).show()
+            navController.navigate("homepage") {
+                popUpTo("homepage") { inclusive = true }
+            }
+            viewModel.clearAddSuccess()
+        }
+    }
+
 
     Scaffold(
         topBar = {

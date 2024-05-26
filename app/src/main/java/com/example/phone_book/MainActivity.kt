@@ -1,8 +1,10 @@
 package com.example.phone_book
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -37,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +55,7 @@ import com.example.phone_book.entity.Contacts
 import com.example.phone_book.ui.theme.PhonebookTheme
 import com.example.phone_book.viewmodel.ContactDetailViewModel
 import com.example.phone_book.viewmodel.HomePageViewModel
+import com.example.phone_book.viewmodelfactory.HomePageViewModelFactory
 import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
@@ -81,14 +85,14 @@ fun PageTransitions() {
             HomePage(navController = navController)
         }
         composable("contact_add_page") {
-            AddContact()
+            AddContact(navController)
         }
         composable("contact_detail_page/{contact}", arguments = listOf(
             navArgument("contact") { type = NavType.StringType }
         )) {
             val json = it.arguments?.getString("contact")
             val obj = Gson().fromJson(json, Contacts::class.java)
-            ContactDetail(obj)
+            ContactDetail(obj,navController)
         }
     }
 }
@@ -103,9 +107,15 @@ fun HomePage(navController: NavController) {
     val ct = remember {
         mutableStateOf("")
     }
-    val viewModel: HomePageViewModel = viewModel()
+    val context = LocalContext.current
+    val viewModel: HomePageViewModel = viewModel(
+        factory = HomePageViewModelFactory(context.applicationContext as Application)
+    )
     val contactList = viewModel.contactList.observeAsState(listOf())
 
+    LaunchedEffect(key1 = true) {
+        viewModel.uploadContacts()
+    }
 
     Scaffold(
         topBar = {
@@ -185,10 +195,12 @@ fun HomePage(navController: NavController) {
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(text = "${contact.contact_name} - ${contact.contact_number}")
+                                    Text(text = "${contact.contact_name} - ${contact.contact_no}")
 
                                     IconButton(onClick = {
                                         viewModel.delete(contact.contact_id)
+                                        Toast.makeText(context, "Kişi Silindi!", Toast.LENGTH_SHORT)
+                                            .show()
                                     }) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.delete_icon),

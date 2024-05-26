@@ -11,6 +11,7 @@ import com.example.phone_book.repo.ContactDaoRepository
 class HomePageViewModel(application: Application) : AndroidViewModel(application) {
     var crepo = ContactDaoRepository(application)
     var contactList = MutableLiveData<List<Contacts>>()
+    var addSuccess=MutableLiveData<Boolean>()
 
     init {
         uploadContacts()
@@ -27,5 +28,10 @@ class HomePageViewModel(application: Application) : AndroidViewModel(application
 
     fun delete(contact_id: Int) {
         crepo.deleteContact(contact_id)
+    }
+
+    fun add(contactName: String, contactNumber: String) {
+        crepo.addContact(contactName, contactNumber)
+        addSuccess.value = true  // Ekleme işlemi başarılı olursa
     }
 }

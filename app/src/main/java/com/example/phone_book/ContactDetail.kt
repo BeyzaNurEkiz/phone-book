@@ -1,7 +1,9 @@
 package com.example.phone_book
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,28 +22,35 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.phone_book.entity.Contacts
 import com.example.phone_book.viewmodel.AddContactViewModel
 import com.example.phone_book.viewmodel.ContactDetailViewModel
+import com.example.phone_book.viewmodel.HomePageViewModel
+import com.example.phone_book.viewmodelfactory.ContactDetailViewModelFactory
+import com.example.phone_book.viewmodelfactory.HomePageViewModelFactory
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactDetail(incomingContact: Contacts) {
+fun ContactDetail(incomingContact: Contacts, navController: NavController) {
     val ctName = remember { mutableStateOf("") }
     val ctNumber = remember { mutableStateOf("") }
     val localFocusManager =
         LocalFocusManager.current   // Geri tuşuna basılınca Texfieldlerdeki seçimi kaldırır.
 
-    val viewModel: ContactDetailViewModel = viewModel()
-
+    val context = LocalContext.current
+    val viewModel: ContactDetailViewModel = viewModel(
+        factory = ContactDetailViewModelFactory(context.applicationContext as Application)
+    )
     LaunchedEffect(key1 = true) {
         ctName.value = incomingContact.contact_name
-        ctNumber.value = incomingContact.contact_number
+        ctNumber.value = incomingContact.contact_no
     }
 
     Scaffold(
@@ -73,7 +82,10 @@ fun ContactDetail(incomingContact: Contacts) {
                     viewModel.update(incomingContact.contact_id, contact_name, contact_number)
 
                     localFocusManager.clearFocus()
-
+                    Toast.makeText(context, "Güncelleme başarılı!", Toast.LENGTH_SHORT).show()
+                    navController.navigate("homepage") {
+                        popUpTo("homepage") { inclusive = true }
+                    }
                 }, modifier = Modifier.size(250.dp, 50.dp)) {
                     Text(text = "Güncelle")
                 }
